@@ -1,19 +1,21 @@
-const mysql = require("mysql2");
+// config/db.js
+
+const mysql = require("mysql2/promise");
 require("dotenv").config();
 
-const db = mysql.createConnection({
-  host: process.env.DB_HOST || "localhost",
-  user: process.env.DB_USER || "root",
-  password: process.env.DB_PASS || "Gvb@4321",
-  database: process.env.DB_NAME || "farmer"
-});
+// Create a connection pool from the DATABASE_URL.
+// The pool is more efficient and resilient for serverless environments.
+const pool = mysql.createPool(process.env.DATABASE_URL);
 
-db.connect((err) => {
-  if (err) {
+// Test the connection
+pool.getConnection()
+  .then(connection => {
+    console.log("Connected to TiDB Cloud (MySQL compatible) Database ✅");
+    connection.release(); // release the connection back to the pool
+  })
+  .catch(err => {
     console.error("Database connection failed:", err);
-    return;
-  }
-  console.log("Connected to MySQL Database ✅");
-});
+  });
 
-module.exports = db;
+// Export the pool so it can be used in your models
+module.exports = pool;

@@ -1,34 +1,23 @@
 const db = require("../config/db");
 
-// Ensure table has new columns
-db.query(`
-  CREATE TABLE IF NOT EXISTS users (
-    user_id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    phone VARCHAR(15) NOT NULL UNIQUE,
-    password_hash VARCHAR(255) NOT NULL,
-    selected_language VARCHAR(10) DEFAULT 'en',
-    role ENUM('farmer','admin','other') DEFAULT 'farmer',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-  ) DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci
-`);
-
 const User = {
-  create: (userData, callback) => {
+  create: async (userData) => {
     const { name, phone, password_hash, role, selected_language } = userData;
-    db.query(
-      "INSERT INTO users (name, phone, password_hash, role, selected_language) VALUES (?, ?, ?, ?, ?)",
-      [name, phone, password_hash, role, selected_language || "en"],
-      callback
-    );
+    const sql = "INSERT INTO users (name, phone, password_hash, role, selected_language) VALUES (?, ?, ?, ?, ?)";
+    const [result] = await db.query(sql, [name, phone, password_hash, role, selected_language || "en"]);
+    return result;
   },
 
-  findByPhone: (phone, callback) => {
-    db.query("SELECT * FROM users WHERE phone = ?", [phone], callback);
+  findByPhone: async (phone) => {
+    const sql = "SELECT * FROM users WHERE phone = ?";
+    const [rows] = await db.query(sql, [phone]);
+    return rows[0]; // Returns the user object or undefined
   },
 
-  findById: (id, callback) => {
-    db.query("SELECT user_id, name, phone, role, selected_language FROM users WHERE user_id = ?", [id], callback);
+  findById: async (id) => {
+    const sql = "SELECT user_id, name, phone, role, selected_language FROM users WHERE user_id = ?";
+    const [rows] = await db.query(sql, [id]);
+    return rows[0];
   }
 };
 
